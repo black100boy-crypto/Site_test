@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Serpent — E-school</title>
+<style>
+#sp-hud{position:absolute;left:0;right:0;top:0;display:flex;justify-content:center;gap:10px;padding:8px;pointer-events:none;font-weight:800}
+.sp-p{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);border-radius:14px;padding:6px 14px;text-align:center;min-width:84px}
+.sp-p small{display:block;font-size:.62rem;letter-spacing:1.2px;color:#94a3c4}.sp-p b{font-size:1.3rem;color:#ffe08a}
+.sp-title{font-size:clamp(2rem,9vw,3rem);font-weight:800;letter-spacing:2px;margin:0;background:linear-gradient(90deg,#4ade80,#22d3ee,#7c5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sp-rec{display:flex;gap:10px;margin:14px 0 6px}.sp-rec>div{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:10px}
+.sp-rec small{display:block;color:#94a3c4;font-size:.72rem;letter-spacing:1px}.sp-rec b{display:block;font-size:1.6rem;color:#ffe08a}
+.sp-row{display:flex;gap:10px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.04);margin-top:4px;text-align:left;font-size:.9rem}
+.sp-row b{width:20px;color:#4ade80}.sp-row span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sp-row em{font-style:normal;color:#ffe08a}
+.sp-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.sp-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}.sp-stats div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px}
+.sp-stats small{display:block;color:#94a3c4;font-size:.7rem;letter-spacing:1px}.sp-stats b{font-size:1.4rem;color:#ffe08a}
+.sp-ok{color:#4ade80;font-weight:700}.sp-ko{color:#ff6b81;font-weight:700}
+.sp-dot{width:34px;height:34px;border-radius:50%;display:block}
+canvas{display:block;touch-action:none}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<script src="config.js"></script>
+<script src="commun.js"></script>
+<script>
+(function () {
+'use strict';
+var TEST = /[?&]test=1/.test(location.search) && EC.cfg.devMode === true;
+var root = document.getElementById('game'), $ = function (i) { return document.getElementById(i); }, esc = EC.util.esc, clamp = EC.util.clamp;
+var fmt = function (n) { return String(n | 0).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); };
+EC.ui.bar('SERPENT');
+EC.register('serpent', { coinsPerSec: .8, maxRun: 120, maxScore: 20000, perHour: 600 });
+EC.register('serpent_sm', { coinsPerSec: .8, maxRun: 120, maxScore: 20000, perHour: 600 });
+
+/* ================= SIMULATION déterministe (tout est ici : rejouable à l'identique) ================= */
+var N = 22, DX = [1, 0, -1, 0], DY = [0, 1, 0, -1];   // 0 droite, 1 bas, 2 gauche, 3 haut
+function makeSim(seed, mode) {          // mode 0 = classique (murs), 1 = sans murs (traverse les bords)
+  var rnd = EC.util.seeded(seed >>> 0);
+  var S = { t: 0, score: 0, eaten: 0, over: false, dir: 0, mode: mode, snake: [{ x: 11, y: 11 }, { x: 10, y: 11 }, { x: 9, y: 11 }], food: null, bonus: null, acc: 0, q: [], ev: [], why: '' };
+  function place() {
+    var occ = {}, i; for (i = 0; i < S.snake.length; i++) occ[S.snake[i].y * N + S.snake[i].x] = 1;
+    if (S.food) occ[S.food.y * N + S.food.x] = 1; if (S.bonus) occ[S.bonus.y * N + S.bonus.x] = 1;
+    var free = []; for (i = 0; i < N * N; i++) if (!occ[i]) free.push(i);
+    if (!free.length) return null; var c = free[Math.floor(rnd() * free.length)]; return { x: c % N, y: (c / N) | 0 };
+  }
+  S.food = place();
+  function interval() { return Math.max(4, 10 - Math.floor(S.eaten / 6)); }
+  function move() {
+    var d = S.dir;
+    while (S.q.length) { var c = S.q.shift(); if (c !== d && ((c + 2) & 3) !== d) { d = c; break; } }
+    S.dir = d; var h = S.snake[0], nx = h.x + DX[d], ny = h.y + DY[d];
+    if (S.mode) { nx = (nx + N) % N; ny = (ny + N) % N; } else if (nx < 0 || ny < 0 || nx >= N || ny >= N) { S.over = true; S.why = 'wall'; return; }
+    var grow = (S.food && nx === S.food.x && ny === S.food.y), gb = (S.bonus && nx === S.bonus.x && ny === S.bonus.y);
+    var len = S.snake.length - ((grow || gb) ? 0 : 1);          // la queue avance si on ne grandit pas
+    for (var i = 0; i < len; i++) if (S.snake[i].x === nx && S.snake[i].y === ny) { S.over = true; S.why = 'self'; return; }
+    S.snake.unshift({ x: nx, y: ny });
+    if (grow) { S.eaten++; S.score += 10; S.ev.push('eat'); S.food = place(); if (S.eaten % 5 === 0 && !S.bonus) { var b = place(); if (b) { b.life = 600; S.bonus = b; } } }
+    else if (gb) { S.score += 50; S.ev.push('bonus'); S.bonus = null; }
+    else S.snake.pop();
+    if (!S.food) { S.over = true; S.why = 'win'; S.score += 500; }
+  }
+  return {
+    S: S,
+    step: function (inp) {            // inp : -1 (rien) ou direction 0..3
+      if (S.over) return; S.t++;
+      if (inp >= 0 && S.q.length < 2) { var last = S.q.length ? S.q[S.q.length - 1] : S.dir; if (inp !== last && ((inp + 2) & 3) !== last) S.q.push(inp); }
+      if (S.bonus && --S.bonus.life <= 0) S.bonus = null;
+      if (++S.acc >= interval()) { S.acc = 0; move(); }
+    }
+  };
+}
+/* journal d'entrées : suite plate [tick, direction, tick, direction, ...] */
+function replay(seed, mode, log, maxTicks) {
+  var sim = makeSim(seed, mode), i = 0;
+  while (!sim.S.over && sim.S.t < maxTicks) { var inp = -1; if (i < log.length && log[i] === sim.S.t + 1) { inp = log[i + 1]; i += 2; } sim.step(inp); }
+  return { score: sim.S.score, eaten: sim.S.eaten, ticks: sim.S.t, over: sim.S.over };
+}
+
+/* ================= Peaux (boutique) ================= */
+var SKINS = [
+  { id: 'default', n: 'Émeraude', p: 0, a: '#4ade80', b: '#16a34a' }, { id: 'sp_azur', n: 'Azur', p: 120, a: '#38bdf8', b: '#2563eb' },
+  { id: 'sp_rose', n: 'Rose néon', p: 150, a: '#ff7ab6', b: '#d9266f' }, { id: 'sp_or', n: 'Or', p: 250, a: '#ffe08a', b: '#f59e0b' },
+  { id: 'sp_arc', n: 'Arc-en-ciel', p: 400, a: 'rainbow', b: 'rainbow' }
+];
+function skin() { var id = EC.shop.selected('serpent_skin', 'default'); return SKINS.filter(function (s) { return s.id === id; })[0] || SKINS[0]; }
+function rainbow(i) { return 'hsl(' + ((i * 22) % 360) + ',85%,58%)'; }
+
+/* ================= Jeu ================= */
+var cv = document.createElement('canvas'), ctx = cv.getContext('2d'); root.appendChild(cv);
+var hud = document.createElement('div'); hud.id = 'sp-hud'; hud.style.display = 'none';
+hud.innerHTML = '<div class="sp-p"><small>SCORE</small><b id="sp-sc">0</b></div><div class="sp-p"><small>RECORD</small><b id="sp-rc">0</b></div><div class="sp-p"><small>LONGUEUR</small><b id="sp-ln">3</b></div>'; root.appendChild(hud);
+var VW = 600, VH = 600, DPR = 1, cell = 20, gx = 0, gy = 0;
+var state = 'menu', sim = null, seed = 0, mode = 0, log = [], raf = 0, lastTs = 0, acc = 0, t0 = 0, pausedMs = 0, pauseAt = 0, tainted = false, liveScore = EC.secure(0), overlay = null, fx = [], pending = -1, moveFrac = 0;
+try { mode = EC.load('serpent_mode', 0) | 0; } catch (e) {}
+function layout() {
+  DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+  var r = root.getBoundingClientRect(); VW = Math.max(240, r.width); VH = Math.max(240, r.height);
+  cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR); cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+  var top = 56, avail = Math.min(VW - 16, VH - top - 8); cell = Math.max(8, Math.floor(avail / N)); gx = Math.floor((VW - cell * N) / 2); gy = top + Math.max(0, Math.floor((VH - top - cell * N) / 2));
+  if (state !== 'play') draw();
+}
+window.addEventListener('resize', layout);
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function draw() {
+  var c = ctx; c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, VW, VH);
+  var W = cell * N;
+  c.fillStyle = 'rgba(8,12,30,.9)'; c.fillRect(gx, gy, W, W);
+  c.fillStyle = 'rgba(255,255,255,.035)'; for (var yy = 0; yy < N; yy++) for (var xx = (yy & 1); xx < N; xx += 2) c.fillRect(gx + xx * cell, gy + yy * cell, cell, cell);
+  var mode0 = sim ? sim.S.mode : mode;
+  c.strokeStyle = mode0 ? 'rgba(124,92,255,.55)' : 'rgba(255,80,110,.8)'; c.lineWidth = 3; if (mode0) c.setLineDash([8, 6]); c.strokeRect(gx - 1.5, gy - 1.5, W + 3, W + 3); c.setLineDash([]);
+  if (!sim) return;
+  var S = sim.S, T = performance.now() / 1000, sk = skin(), i;
+  if (S.food) { var f = S.food, pu = 1 + .1 * Math.sin(T * 7); c.fillStyle = 'rgba(255,90,110,.25)'; c.beginPath(); c.arc(gx + (f.x + .5) * cell, gy + (f.y + .5) * cell, cell * .6 * pu, 0, 6.3); c.fill(); c.fillStyle = '#ff4d6d'; c.beginPath(); c.arc(gx + (f.x + .5) * cell, gy + (f.y + .5) * cell, cell * .34 * pu, 0, 6.3); c.fill(); c.fillStyle = '#4ade80'; c.fillRect(gx + (f.x + .5) * cell - 1, gy + f.y * cell + 1, 2, cell * .2); }
+  if (S.bonus) { var b = S.bonus; if (b.life > 120 || ((S.t >> 3) & 1)) { var bp = 1 + .15 * Math.sin(T * 9); c.fillStyle = 'rgba(255,224,138,.3)'; c.beginPath(); c.arc(gx + (b.x + .5) * cell, gy + (b.y + .5) * cell, cell * .75 * bp, 0, 6.3); c.fill(); c.fillStyle = '#ffe08a'; c.beginPath(); c.arc(gx + (b.x + .5) * cell, gy + (b.y + .5) * cell, cell * .4 * bp, 0, 6.3); c.fill(); c.fillStyle = '#7a4a00'; c.font = 'bold ' + Math.round(cell * .5) + 'px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('★', gx + (b.x + .5) * cell, gy + (b.y + .55) * cell); } }
+  var n = S.snake.length;
+  for (i = n - 1; i >= 0; i--) {
+    var sg = S.snake[i], k = i / Math.max(1, n - 1), pad = cell * (i === 0 ? .06 : .1 + .08 * k);
+    c.fillStyle = sk.a === 'rainbow' ? rainbow(n - i) : (i === 0 ? sk.a : mix(sk.a, sk.b, k));
+    rr(c, gx + sg.x * cell + pad, gy + sg.y * cell + pad, cell - pad * 2, cell - pad * 2, cell * .3); c.fill();
+  }
+  var h = S.snake[0], d = S.dir, ex = DX[d], ey = DY[d], px = -ey, py = ex, cx0 = gx + (h.x + .5) * cell, cy0 = gy + (h.y + .5) * cell;
+  c.fillStyle = '#fff'; for (var s = -1; s <= 1; s += 2) { c.beginPath(); c.arc(cx0 + ex * cell * .16 + px * s * cell * .2, cy0 + ey * cell * .16 + py * s * cell * .2, cell * .13, 0, 6.3); c.fill(); }
+  c.fillStyle = '#0a0f2a'; for (s = -1; s <= 1; s += 2) { c.beginPath(); c.arc(cx0 + ex * cell * .22 + px * s * cell * .2, cy0 + ey * cell * .22 + py * s * cell * .2, cell * .06, 0, 6.3); c.fill(); }
+  for (i = fx.length - 1; i >= 0; i--) { var q = fx[i]; q.l -= .03; if (q.l <= 0) { fx.splice(i, 1); continue; } c.globalAlpha = q.l; c.strokeStyle = q.c; c.lineWidth = 3; c.beginPath(); c.arc(q.x, q.y, (1 - q.l) * cell * 2.2, 0, 6.3); c.stroke(); } c.globalAlpha = 1;
+}
+function mix(a, b, k) { var A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16), r = ((A >> 16) * (1 - k) + (B >> 16) * k) | 0, g = (((A >> 8) & 255) * (1 - k) + ((B >> 8) & 255) * k) | 0, bl = ((A & 255) * (1 - k) + (B & 255) * k) | 0; return 'rgb(' + r + ',' + g + ',' + bl + ')'; }
+
+var hc = {};
+function updateHud() { var S = sim.S; set('sp-sc', fmt(S.score)); set('sp-ln', S.snake.length); }
+function set(id, v) { if (hc[id] !== v) { hc[id] = v; $(id).textContent = v; } }
+
+/* ---- entrées ---- */
+function pushDir(d) { if (state === 'play') pending = d; }
+var KEYS = { ArrowRight: 0, d: 0, D: 0, ArrowDown: 1, s: 1, S: 1, ArrowLeft: 2, q: 2, Q: 2, a: 2, A: 2, ArrowUp: 3, z: 3, Z: 3, w: 3, W: 3 };
+window.addEventListener('keydown', function (e) {
+  if (e.key in KEYS && state === 'play') { e.preventDefault(); pushDir(KEYS[e.key]); }
+  else if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && state === 'play') pauseGame();
+  else if (e.key === 'Escape' && state === 'pause') resumeGame();
+});
+var tsx = 0, tsy = 0, tid = -1;
+cv.addEventListener('pointerdown', function (e) { tid = e.pointerId; tsx = e.clientX; tsy = e.clientY; });
+cv.addEventListener('pointermove', function (e) {
+  if (e.pointerId !== tid || state !== 'play') return; var dx = e.clientX - tsx, dy = e.clientY - tsy;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) > 22) { pushDir(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 0 : 2) : (dy > 0 ? 1 : 3)); tsx = e.clientX; tsy = e.clientY; }
+});
+cv.addEventListener('pointerup', function () { tid = -1; });
+
+/* ---- boucle (pas fixe 60 Hz) ---- */
+var DT = 1 / 60;
+function frame(ts) {
+  if (state !== 'play') return; raf = requestAnimationFrame(frame);
+  var dms = Math.min(ts - lastTs, 250); lastTs = ts;
+  if (EC.guard.paused()) { pauseGame(); return; }
+  acc += EC.guard.dt(dms); var steps = 0;
+  while (acc >= DT && steps < 5 && !sim.S.over) {
+    var inp = pending; pending = -1;
+    if (inp >= 0) log.push(sim.S.t + 1, inp);
+    sim.step(inp); steps++; acc -= DT;
+    var ev = sim.S.ev; while (ev.length) { var e = ev.shift(), h = sim.S.snake[0]; EC.sfx.play(e === 'eat' ? 'pop' : 'powerup'); fx.push({ x: gx + (h.x + .5) * cell, y: gy + (h.y + .5) * cell, l: 1, c: e === 'eat' ? '#ff4d6d' : '#ffe08a' }); }
+  }
+  if (steps === 5) acc = 0;
+  liveScore.set(sim.S.score); draw(); updateHud();
+  if (sim.S.over) endGame();
+}
+function rndSeed() { try { return crypto.getRandomValues(new Uint32Array(1))[0]; } catch (e) { return (Math.random() * 4294967296) >>> 0; } }
+function clearOverlay() { if (overlay) { overlay.remove(); overlay = null; } }
+function startGame() {
+  clearOverlay(); if (EC.ui.lockedScreen && EC.locked()) { EC.ui.lockedScreen(); return; }
+  seed = rndSeed(); sim = makeSim(seed, mode); log = []; fx = []; hc = {}; acc = 0; pending = -1; tainted = false; pausedMs = 0; liveScore = EC.secure(0);
+  $('sp-rc').textContent = fmt(EC.scores.best(gameKey()));
+  layout(); hud.style.display = 'flex'; state = 'play'; t0 = performance.now(); lastTs = t0;
+  EC.guard.start(function () { tainted = true; if (state === 'play') pauseGame(); });
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
+}
+function gameKey() { return mode ? 'serpent_sm' : 'serpent'; }
+function pauseGame() {
+  if (state !== 'play') return; state = 'pause'; pauseAt = performance.now(); cancelAnimationFrame(raf); draw(); pending = -1;
+  overlay = EC.ui.screen('<h2>⏸ Pause</h2><p>Score ' + fmt(sim.S.score) + '</p>' + (tainted ? '<p class="sp-ko">Une anomalie a été détectée : cette partie ne rapportera ni pièces ni classement.</p>' : '') +
+    '<button class="ec-btn pri" id="sp-resume">▶ Reprendre</button><button class="ec-btn" id="sp-menu">🏠 Menu</button>');
+  $('sp-resume').onclick = resumeGame;
+  $('sp-menu').onclick = function () { EC.ui.confirm('Quitter la partie ?', 'La partie en cours sera perdue.', 'Oui', 'Non').then(function (y) { if (y) toMenu(); }); };
+}
+function resumeGame() { if (state !== 'pause') return; clearOverlay(); pausedMs += performance.now() - pauseAt; state = 'play'; lastTs = performance.now(); acc = 0; raf = requestAnimationFrame(frame); }
+function toMenu() { clearOverlay(); state = 'menu'; hud.style.display = 'none'; cancelAnimationFrame(raf); sim = null; layout(); showMenu(); }
+
+function endGame() {
+  state = 'verify'; cancelAnimationFrame(raf); draw(); hud.style.display = 'none'; EC.sfx.play('lose');
+  var S = sim.S, wallSec = (performance.now() - t0 - pausedMs) / 1000, live = { score: S.score, eaten: S.eaten, ticks: S.t }, myLog = log, mySeed = seed, myMode = mode, memOk = liveScore.get() === live.score;
+  var R = replay(mySeed, myMode, myLog, 60 * 60 * 60);       // le rejeu est quasi instantané pour un serpent
+  var same = R.over && R.score === live.score && R.eaten === live.eaten && R.ticks === live.ticks, timeOk = live.ticks / 60 <= wallSec * 1.12 + 2.5, why = '';
+  if (!same) why = 'Le rejeu ne correspond pas à la partie.'; else if (!timeOk) why = 'La durée de la partie est incohérente.'; else if (!memOk) why = 'Une valeur a été modifiée en mémoire.'; else if (tainted) why = 'Une anomalie a été détectée pendant la partie.'; else if (EC.locked()) why = 'Ton profil est protégé temporairement.';
+  if (!same || !timeOk || !memOk) EC.flag('Serpent : partie non conforme (' + (!same ? 'rejeu' : !timeOk ? 'durée' : 'mémoire') + ')');
+  showResult(live, wallSec, why);
+}
+function showResult(live, wallSec, why) {
+  var key = gameKey(), ok = !why, best = EC.scores.best(key), isRecord = ok && live.score > best, granted = 0;
+  if (ok && live.ticks >= 300) {
+    granted = (EC.coins.settle(key, { req: Math.min(120, Math.floor(live.score / 8)), seconds: wallSec }) || {}).granted | 0;
+    EC.scores.submit(key, live.score, { eaten: live.eaten }); EC.xp.add(Math.min(40, Math.floor(live.eaten / 2)));
+  }
+  if (isRecord) EC.sfx.play('win');
+  overlay = EC.ui.screen('<h1 class="sp-title" style="font-size:2.1rem">' + (isRecord ? '🏆 NOUVEAU RECORD !' : 'PARTIE TERMINÉE') + '</h1>' +
+    '<div class="sp-stats"><div><small>SCORE</small><b>' + fmt(live.score) + '</b></div><div><small>MEILLEUR</small><b>' + fmt(Math.max(best, ok ? live.score : 0)) + '</b></div><div><small>POMMES</small><b>' + live.eaten + '</b></div><div><small>PIÈCES</small><b>+' + granted + ' 🪙</b></div></div>' +
+    (ok ? '<p class="sp-ok">✔ Partie vérifiée</p>' : '<p class="sp-ko">✖ Partie non validée : ' + esc(why) + '<br>Aucune récompense ni classement.</p>') +
+    '<button class="ec-btn pri" id="sp-again">↻ Rejouer</button><button class="ec-btn" id="sp-menu2">🏠 Menu</button><button class="ec-btn" id="sp-quit">🚪 Quitter</button>');
+  state = 'over'; EC.ui.refresh();
+  $('sp-again').onclick = startGame; $('sp-menu2').onclick = toMenu; $('sp-quit').onclick = function () { EC.quit(); };
+}
+
+/* ---- menus ---- */
+function showMenu() {
+  clearOverlay(); var key = gameKey(), top = EC.scores.top(key), best = EC.scores.best(key), rec = top[0];
+  var rows = top.slice(0, 5).map(function (r, i) { return '<div class="sp-row"><b>' + (i + 1) + '</b><span>' + esc(r.n) + '</span><em>' + fmt(r.s) + '</em></div>'; }).join('') || '<p class="ec-mu">Aucun score pour l’instant : sois le premier !</p>';
+  overlay = EC.ui.screen('<h1 class="sp-title">SERPENT</h1><p>Mange les pommes, évite les murs et ta queue. ★ = bonus (+50).</p>' +
+    '<div class="sp-modes"><button class="ec-opt' + (mode === 0 ? ' sel' : '') + '" data-m="0">🧱 Classique<small>les murs tuent</small></button><button class="ec-opt' + (mode === 1 ? ' sel' : '') + '" data-m="1">🌀 Sans murs<small>traverse les bords</small></button></div>' +
+    '<div class="sp-rec"><div><small>🏆 RECORD</small><b>' + (rec ? fmt(rec.s) : '—') + '</b></div><div><small>⭐ TON MEILLEUR</small><b>' + fmt(best) + '</b></div></div>' + rows +
+    '<button class="ec-btn pri" id="sp-play" style="margin-top:14px">▶ JOUER</button><button class="ec-btn" id="sp-shop">🛍 Boutique de serpents</button><button class="ec-btn" id="sp-how">❓ Comment jouer</button>');
+  [].forEach.call(overlay.querySelectorAll('[data-m]'), function (b) { b.onclick = function () { mode = +b.dataset.m; EC.save('serpent_mode', mode); EC.sfx.play('click'); showMenu(); }; });
+  $('sp-play').onclick = startGame; $('sp-shop').onclick = showShop; $('sp-how').onclick = showHow; $('sp-play').focus();
+}
+function showHow() {
+  clearOverlay();
+  overlay = EC.ui.screen('<h2>Comment jouer</h2><p style="text-align:left"><b>Ordinateur</b><br>Flèches, ZQSD ou WASD : tourner<br>Échap ou P : pause</p><p style="text-align:left"><b>Téléphone</b><br>Glisse le doigt dans la direction voulue.</p><p style="text-align:left"><b>Astuces</b><br>Le serpent accélère toutes les 6 pommes. L’étoile ★ rapporte 50 points mais disparaît vite. En mode « Sans murs », sors d’un côté pour réapparaître de l’autre.</p><button class="ec-btn pri" id="sp-ok">OK</button>');
+  $('sp-ok').onclick = showMenu;
+}
+function showShop() {
+  clearOverlay(); var sel = EC.shop.selected('serpent_skin', 'default');
+  var grid = SKINS.map(function (s) { var own = s.p === 0 || EC.shop.owned(s.id), bg = s.a === 'rainbow' ? 'linear-gradient(135deg,#ff4d8d,#f5c542,#4ade80,#22d3ee,#7c5cff)' : 'linear-gradient(135deg,' + s.a + ',' + s.b + ')';
+    return '<button class="ec-opt' + (sel === s.id ? ' sel' : '') + '" data-id="' + s.id + '"><span class="sp-dot" style="background:' + bg + '"></span>' + s.n + '<small>' + (sel === s.id ? 'Équipé' : own ? 'Équiper' : '🪙 ' + s.p) + '</small></button>'; }).join('');
+  overlay = EC.ui.screen('<h2>🛍 Serpents</h2><p class="ec-mu">Tes pièces : 🪙 ' + EC.coins.get() + '</p><div class="ec-grid">' + grid + '</div><div class="ec-msg" id="sp-sm"></div><button class="ec-btn" id="sp-back">← Retour</button>');
+  [].forEach.call(overlay.querySelectorAll('.ec-opt'), function (b) { b.onclick = function () {
+    var s = SKINS.filter(function (x) { return x.id === b.dataset.id; })[0], own = s.p === 0 || EC.shop.owned(s.id);
+    if (!own) { if (!EC.shop.buy(s.id, s.p)) { var m = $('sp-sm'); m.textContent = 'Pas assez de pièces.'; m.className = 'ec-msg ko'; EC.sfx.play('error'); return; } EC.sfx.play('build'); }
+    EC.shop.select('serpent_skin', s.id); EC.sfx.play('click'); showShop(); }; });
+  $('sp-back').onclick = showMenu;
+}
+EC.ui.setQuit(function () { if (state === 'play') pauseGame(); else EC.quit(); });
+layout(); showMenu();
+if (TEST) window.__test = { makeSim: makeSim, replay: replay, state: function () { return { state: state, S: sim && sim.S, log: log, seed: seed, mode: mode }; }, text: function () { return document.body.innerText; } };
+})();
+</script>
+</body>
+</html>

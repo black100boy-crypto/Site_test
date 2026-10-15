@@ -1,0 +1,14 @@
+E-SCHOOL — ZONE DE JEUX (Nova Shooter)
+
+1) Copie le dossier "jeux" dans site_test (a côté de espace.html).
+2) Dans espace.html, remplace :
+     detente:function(){return soon("🎮 Détente")},
+   par :
+     detente:function(){location.href="jeux/index.html";return ""},
+3) Ouvre avec Live Server : http://127.0.0.1:5500/jeux/index.html
+
+AVANT DE PUBLIER LE SITE :
+- config.js : mets devMode:false et change la phrase "secret".
+- Classement mondial (optionnel) : cree un projet Firebase, colle sa config dans config.js (firebase:{...}),
+  active Authentification anonyme et Firestore, puis colle serveur/firestore.rules dans les regles Firestore.
+  Sans Firebase, le record affiche est celui de l'appareil.

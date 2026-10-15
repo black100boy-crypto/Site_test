@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription - E-school</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="etoiles"></canvas>
+
+  <header>
+    <h1>E-school</h1>
+    <nav>
+      <a href="index.html">Accueil</a>
+      <a href="apropos.html">A propos</a>
+      <a href="services.html">Services</a>
+      <a href="contact.html">Contact</a>
+      <a href="connexion.html">Connexion</a>
+      <a href="inscription.html" class="nav-cta">Inscription</a>
+    </nav>
+  </header>
+
+  <main class="auth">
+    <div class="auth-carte">
+      <div class="auth-interieur">
+
+        <aside class="auth-visuel">
+          <div class="systeme">
+            <div class="planete-auth"></div>
+            <div class="orbite"><div class="lune"></div></div>
+          </div>
+          <h2>Embarque avec nous</h2>
+          <p>Rejoins E-school et explore un univers de savoir.</p>
+        </aside>
+
+        <div class="auth-form">
+          <h2>Créer mon compte</h2>
+          <p class="sous-titre">Quelques secondes suffisent.</p>
+
+          <form id="inscription-form">
+            <div class="champ">
+              <input type="text" id="nom" placeholder=" " required>
+              <label for="nom">Nom complet</label>
+            </div>
+
+            <div class="champ">
+              <input type="email" id="email" placeholder=" " required>
+              <label for="email">Email</label>
+            </div>
+
+            <div class="champ">
+              <input type="tel" id="telephone" placeholder=" " required>
+              <label for="telephone">Téléphone</label>
+            </div>
+
+            <div class="champ">
+              <select id="service" required>
+                <option value="">Service qui m'intéresse</option>
+                <option>Cours en ligne par matière</option>
+                <option>Soutien scolaire individuel</option>
+                <option>Tutorat en direct</option>
+                <option>Formation avec certificat</option>
+              </select>
+            </div>
+
+            <button type="submit">S'inscrire</button>
+          </form>
+
+          <p class="bas-form">Tu as déjà un compte ? <a href="connexion.html">Connecte-toi</a></p>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="univers.js"></script>
+  <script>
+    document.getElementById('inscription-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const texte =
+        "Bonjour E-school, je souhaite m'inscrire.\n" +
+        "Nom : " + document.getElementById('nom').value + "\n" +
+        "Email : " + document.getElementById('email').value + "\n" +
+        "Téléphone : " + document.getElementById('telephone').value + "\n" +
+        "Service : " + document.getElementById('service').value;
+
+      window.open('https://wa.me/237690276957?text=' + encodeURIComponent(texte), '_blank');
+
+      setTimeout(function () { window.location.href = 'espace.html'; }, 1000);
+    });
+  </script>
+</body>
+</html>

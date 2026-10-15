@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - E-school</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="etoiles"></canvas>
+
+  <header>
+    <h1>E-school</h1>
+    <nav>
+      <a href="index.html">Accueil</a>
+      <a href="A propos.html">A propos</a>
+      <a href="services.html">Services</a>
+      <a href="contact.html">Contact</a>
+      <a href="connexion.html">Connexion</a>
+      <a href="inscription.html" class="nav-cta">Inscription</a>
+    </nav>
+  </header>
+
+  <main class="auth">
+    <div class="auth-carte">
+      <div class="auth-interieur">
+
+        <aside class="auth-visuel">
+          <div class="systeme">
+            <div class="planete-auth"></div>
+            <div class="orbite"><div class="lune"></div></div>
+          </div>
+          <h3>Content de te revoir</h3>
+          <p>Ton espace d'apprentissage t'attend.</p>
+        </aside>
+
+        <div class="auth-form">
+          <h2>Se connecter</h2>
+          <p class="sous-titre">Entre tes identifiants pour continuer.</p>
+
+          <form id="connexion-form">
+            <div class="champ">
+              <input type="email" id="email" placeholder=" " required>
+              <label for="email">Email</label>
+            </div>
+
+            <div class="champ">
+              <input type="password" id="motdepasse" placeholder=" " required>
+              <label for="motdepasse">Mot de passe</label>
+              <button type="button" class="oeil" id="oeil" aria-label="Afficher le mot de passe">👁</button>
+            </div>
+
+            <button type="submit">Se connecter</button>
+          </form>
+
+          <p id="message-info" class="succes"></p>
+
+          <p class="bas-form">Pas encore de compte ? <a href="inscription.html">Inscris-toi</a></p>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="univers.js"></script>
+  <script>
+    const champMdp = document.getElementById('motdepasse');
+    document.getElementById('oeil').addEventListener('click', function () {
+      champMdp.type = champMdp.type === 'password' ? 'text' : 'password';
+    });
+
+    document.getElementById('connexion-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const info = document.getElementById('message-info');
+      info.textContent = "La connexion sera activée très bientôt.";
+      info.style.display = 'block';
+    });
+  </script>
+</body>
+</html>

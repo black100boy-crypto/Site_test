@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zone de jeux — E-school</title>
+<style>
+#game{overflow-y:auto;overflow-x:hidden;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.hb{max-width:980px;margin:0 auto;padding:18px 14px 40px}
+.hb h1{margin:.1em 0 .1em;font-size:clamp(1.7rem,6vw,2.6rem);background:linear-gradient(90deg,#22d3ee,#7c5cff,#ff4d8d);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hb .sub{color:var(--mu);margin:0 0 16px}
+.rec{display:grid;grid-template-columns:1.4fr 1fr;gap:12px}
+@media(max-width:640px){.rec{grid-template-columns:1fr}}
+.pn{background:var(--gl);border:1px solid var(--bd);border-radius:20px;padding:16px;backdrop-filter:blur(8px)}
+.pn small{display:block;color:var(--mu);letter-spacing:1.2px;font-size:.75rem;font-weight:700}
+.big{font-size:clamp(2.4rem,10vw,3.8rem);font-weight:900;color:#ffe08a;line-height:1.05;margin:4px 0}
+.who{font-weight:700}
+.mine{font-size:2rem;font-weight:800;color:#22d3ee}
+.row{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.04);margin-top:5px;font-size:.95rem}
+.row b{width:26px;color:#22d3ee}.row span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row em{font-style:normal;color:#ffe08a;font-weight:700}
+.row.me{outline:1px solid #22d3ee}
+.row:nth-child(2) b{color:#ffd700}
+h2.t{margin:22px 0 10px;font-size:1.15rem}
+.gs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.g{position:relative;border-radius:20px;padding:16px;border:1px solid var(--bd);background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));display:flex;flex-direction:column;gap:6px;min-height:150px}
+.g .ic{font-size:2rem}.g b{font-size:1.05rem}.g p{margin:0;color:#b8c3e6;font-size:.85rem;flex:1}
+.g.on{border-color:#22d3ee;box-shadow:0 0 0 1px rgba(34,211,238,.4),0 10px 30px rgba(34,211,238,.12)}
+.g.off{opacity:.6}
+.tag{position:absolute;top:12px;right:12px;font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.12)}
+.tag.pr{background:linear-gradient(135deg,#f5c542,#ff9f43);color:#241500}
+.src{font-size:.75rem;color:var(--mu);margin-top:6px}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<script src="config.js"></script>
+<script src="commun.js"></script>
+<script>
+(function () {
+'use strict';
+EC.ui.bar('ZONE DE JEUX');
+var $ = function (id) { return document.getElementById(id); }, esc = EC.util.esc, fmt = function (n) { return String(n | 0).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); };
+var root = $('game');
+root.innerHTML = '<div class="hb"><h1>🎮 Zone de jeux</h1><p class="sub">Détends-toi, bats le record et gagne des pièces 🪙 pour la boutique.</p>' +
+  '<div class="rec"><div class="pn"><small>🏆 RECORD NOVA SHOOTER</small><div class="big" id="rc">—</div><div class="who" id="rcw">Personne pour l’instant. Sois le premier !</div><div class="src" id="rcs"></div></div>' +
+  '<div class="pn"><small>⭐ TON MEILLEUR SCORE</small><div class="mine" id="mine">0</div><div class="ec-mu" id="rank" style="margin-top:4px"></div><button class="ec-btn pri" id="go" style="margin-top:12px">▶ Jouer à Nova Shooter</button></div></div>' +
+  '<h2 class="t">Classement — Nova Shooter</h2><div id="top"></div>' +
+  '<h2 class="t">Les jeux</h2><div class="gs">' +
+  '<a class="g on" style="color:inherit;text-decoration:none" href="nova.html" id="gnova"><span class="ic">🚀</span><b>Nova Shooter</b><p>Tir en arène. Survis aux vagues, bats les Gardiens, enchaîne les combos.</p><span class="tag">GRATUIT</span></a>' +
+  g('🔫', 'Zone Zéro', 'Bataille royale, Loup solitaire, Clash.', 1) + '<a class="g on" style="color:inherit;text-decoration:none" href="trireur.html"><span class="ic">🎯</span><b>Trireur 3D</b><p>FPS néon en 3D : vagues de drones, boss, améliorations à chaque vague.</p><span class="tag">NOUVEAU</span></a>' + '<a class="g on" style="color:inherit;text-decoration:none" href="serpent.html"><span class="ic">🐍</span><b>Serpent</b><p>Le classique en version moderne : 2 modes, bonus et boutique de serpents.</p><span class="tag">GRATUIT</span></a>' + g('🏰', 'Village', 'Construis et attaque les villages des autres élèves.', 1) +
+  g('🏃', 'Course infinie', 'Cours, saute, ramasse des pièces.', 1) + g('♟️', 'Réflexion', 'Un jeu de stratégie sérieux.', 1) + '</div>' +
+  '<p class="src">Chaque partie est vérifiée : le jeu rejoue ta partie pour confirmer le score avant de donner des pièces ou d’entrer au classement.</p></div>';
+function g(ic, n, d, prem) { return '<div class="g off"><span class="ic">' + ic + '</span><b>' + n + '</b><p>' + d + '</p><span class="tag' + (prem ? ' pr' : '') + '">' + (prem ? '👑 BIENTÔT' : 'BIENTÔT') + '</span></div>'; }
+$('go').onclick = function () { EC.sfx.play('click'); location.href = 'nova.html'; };
+
+function render(list, source) {
+  var me = EC.player.name(), best = EC.scores.best('nova');
+  list = list.slice().sort(function (a, b) { return b.score - a.score; }).slice(0, 10);
+  if (list.length) { $('rc').textContent = fmt(list[0].score); $('rcw').textContent = '👑 ' + list[0].name; $('rcs').textContent = source; }
+  $('mine').textContent = fmt(best);
+  var pos = list.filter(function (x) { return x.score > best; }).length + 1;
+  $('rank').textContent = best ? (list.length && best >= list[list.length - 1].score ? 'Tu es n°' + pos + ' du classement' : 'Continue, tu peux entrer dans le top 10 !') : 'Joue une partie pour entrer au classement.';
+  $('top').innerHTML = list.length ? list.map(function (r, i) { return '<div class="row' + (r.name === me && r.score === best ? ' me' : '') + '"><b>' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1) + '</b><span>' + esc(r.name) + '</span><em>' + fmt(r.score) + '</em></div>'; }).join('') : '<p class="ec-mu">Aucun score pour l’instant.</p>';
+}
+var local = EC.scores.top('nova').map(function (r) { return { score: r.s | 0, name: r.n }; });
+render(local, 'Meilleur score sur cet appareil');
+EC.scores.cloudTop('nova', 10).then(function (c) {
+  if (c && c.length) { var all = c.concat([]); /* le meilleur local est déjà envoyé au cloud */ render(all, 'Classement mondial E-school'); }
+});
+})();
+</script>
+</body>
+</html>

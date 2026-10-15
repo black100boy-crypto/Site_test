@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova FPS 3D - E-School</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #05070f;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: #22d3ee;
+            box-shadow: 0 0 10px #22d3ee;
+        }
+        #crosshair::before { width: 4px; height: 100%; border-radius: 2px; }
+        #crosshair::after { width: 100%; height: 4px; border-radius: 2px; }
+
+        #score-container {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #94a3c4;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        #score-val {
+            font-size: 2rem;
+            color: #ff4d8d;
+            text-shadow: 0 0 15px #ff4d8d;
+            margin-left: 10px;
+        }
+
+        #blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(5, 7, 15, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            pointer-events: auto;
+        }
+        
+        #instructions {
+            cursor: pointer;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #22d3ee, #7c5cff, #ff4d8d);
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            to { filter: drop-shadow(0 0 25px rgba(124, 92, 255, 0.6)); transform: scale(1.02); }
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #94a3c4;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            padding: 16px 40px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px -10px #7c5cff;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 15px 40px -10px #22d3ee;
+        }
+
+        .controls {
+            margin-top: 40px;
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: #7c5cff;
+        }
+        kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="ui">
+        <div id="crosshair"></div>
+        <div id="score-container">
+            CIBLES DÉTRUITES <span id="score-val">0</span>
+        </div>
+    </div>
+
+    <div id="blocker">
+        <div id="instructions">
+            <h1>NOVA 3D PROTO</h1>
+            <p>Clique pour verrouiller ta souris et entrer dans la simulation.</p>
+            <button class="btn">DÉMARRER</button>
+            <div class="controls">
+                <div><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> Déplacements</div>
+                <div><kbd>Souris</kbd> Viser</div>
+                <div><kbd>Clic Gauche</kbd> Tirer</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        let camera, scene, renderer, controls;
+        const objects = [];
+        let enemies = [];
+        let raycaster;
+        let score = 0;
+        let weaponGroup;
+        let weaponRecoil = 0;
+
+        let moveForward = false;
+        let moveBackward = false;
+        let moveLeft = false;
+        let moveRight = false;
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let prevTime = performance.now();
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        
+        function playSound(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (type === 'shoot') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'hit') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        init();
+        animate();
+
+        function init() {
+            const blocker = document.getElementById( 'blocker' );
+            const instructions = document.getElementById( 'instructions' );
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color( 0x05070f );
+            scene.fog = new THREE.FogExp2( 0x05070f, 0.015 );
+
+            camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+            camera.position.y = 10;
+
+            const ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
+            scene.add( ambientLight );
+
+            const hemiLight = new THREE.HemisphereLight( 0x22d3ee, 0xff4d8d, 0.4 );
+            hemiLight.position.set( 0, 50, 0 );
+            scene.add( hemiLight );
+
+            controls = new PointerLockControls( camera, document.body );
+
+            instructions.addEventListener( 'click', function () {
+                controls.lock();
+            });
+
+            controls.addEventListener( 'lock', function () {
+                blocker.style.display = 'none';
+            });
+
+            controls.addEventListener( 'unlock', function () {
+                blocker.style.display = 'flex';
+            });
+
+            scene.add( controls.getObject() );
+
+            const onKeyDown = function ( event ) {
+                switch ( event.code ) {
+                    case 'ArrowUp':
+                    case 'KeyW':
+                    case 'KeyZ':
+                        moveForward = true;
+                        break;
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                    case 'KeyQ':
+                        moveLeft = true;
+                        break;
+                    case 'ArrowDown':
+                    case 'KeyS':
+                        moveBackward = true;
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        moveRight = true;
+                        break;
+                }
+            };
+
+            const onKeyUp = function ( event ) {
+                switch ( event.code ) {
+                    case 'ArrowUp':
+                    case 'KeyW':
+                    case 'KeyZ':
+                        moveForward = false;
+                        break;
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                    case 'KeyQ':
+                        moveLeft = false;
+                        break;
+                    case 'ArrowDown':
+                    case 'KeyS':
+                        moveBackward = false;
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        moveRight = false;
+                        break;
+                }
+            };
+
+            document.addEventListener( 'keydown', onKeyDown );
+            document.addEventListener( 'keyup', onKeyUp );
+
+            raycaster = new THREE.Raycaster();
+
+            document.addEventListener( 'mousedown', (e) => {
+                if(controls.isLocked && e.button === 0) {
+                    shoot();
+                }
+            });
+
+            const gridHelper = new THREE.GridHelper( 400, 100, 0x7c5cff, 0x22d3ee );
+            scene.add( gridHelper );
+
+            const boxGeo = new THREE.BoxGeometry( 20, 40, 20 );
+            const boxMat = new THREE.MeshStandardMaterial({ 
+                color: 0x111111,
+                roughness: 0.2,
+                metalness: 0.8
+            });
+
+            for ( let i = 0; i < 30; i ++ ) {
+                const box = new THREE.Mesh( boxGeo, boxMat );
+                
+                let px, pz;
+                do {
+                    px = Math.floor( Math.random() * 20 - 10 ) * 20;
+                    pz = Math.floor( Math.random() * 20 - 10 ) * 20;
+                } while (Math.abs(px) < 40 && Math.abs(pz) < 40);
+
+                box.position.x = px;
+                box.position.y = 20;
+                box.position.z = pz;
+
+                const edges = new THREE.EdgesGeometry( boxGeo );
+                const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x7c5cff, linewidth: 2 } ) );
+                box.add( line );
+
+                scene.add( box );
+                
+                objects.push({
+                    minX: px - 11, maxX: px + 11,
+                    minZ: pz - 11, maxZ: pz + 11
+                });
+            }
+
+            spawnEnemies(10);
+            createWeapon();
+
+            renderer = new THREE.WebGLRenderer( { antialias: true } );
+            renderer.setPixelRatio( window.devicePixelRatio );
+            renderer.setSize( window.innerWidth, window.innerHeight );
+            document.body.appendChild( renderer.domElement );
+            window.addEventListener( 'resize', onWindowResize );
+        }
+
+        function createWeapon() {
+            weaponGroup = new THREE.Group();
+            
+            const barrelGeo = new THREE.CylinderGeometry( 0.2, 0.3, 3, 8 );
+            barrelGeo.rotateX(Math.PI / 2);
+            const barrelMat = new THREE.MeshStandardMaterial( { color: 0x333333, metalness: 0.9 } );
+            const barrel = new THREE.Mesh( barrelGeo, barrelMat );
+            
+            const glowGeo = new THREE.CylinderGeometry( 0.22, 0.22, 1, 8 );
+            glowGeo.rotateX(Math.PI / 2);
+            const glowMat = new THREE.MeshBasicMaterial( { color: 0x22d3ee } );
+            const glow = new THREE.Mesh( glowGeo, glowMat );
+            glow.position.z = -0.5;
+
+            weaponGroup.add(barrel);
+            weaponGroup.add(glow);
+
+            weaponGroup.position.set( 1.5, -1.2, -2 );
+            camera.add( weaponGroup );
+        }
+
+        function spawnEnemies(count) {
+            const enemyGeo = new THREE.BoxGeometry( 4, 4, 4 );
+            const enemyMat = new THREE.MeshStandardMaterial( { 
+                color: 0xff4d8d, 
+                emissive: 0xff4d8d, 
+                emissiveIntensity: 0.6 
+            });
+
+            for(let i = 0; i < count; i++) {
+                const enemy = new THREE.Mesh(enemyGeo, enemyMat);
+                
+                const edges = new THREE.EdgesGeometry( enemyGeo );
+                const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+                enemy.add( line );
+
+                repositionEnemy(enemy);
+                enemy.userData.seed = Math.random() * 100;
+
+                scene.add(enemy);
+                enemies.push(enemy);
+            }
+        }
+
+        function repositionEnemy(enemy) {
+            enemy.position.x = (Math.random() - 0.5) * 300;
+            enemy.position.y = 5 + Math.random() * 20;
+            enemy.position.z = (Math.random() - 0.5) * 300;
+            
+            if(enemy.position.distanceTo(new THREE.Vector3(0,0,0)) < 40) {
+                repositionEnemy(enemy);
+            }
+        }
+
+        function shoot() {
+            playSound('shoot');
+            weaponRecoil = 1.0; 
+
+            raycaster.setFromCamera( new THREE.Vector2(0, 0), camera );
+            const intersects = raycaster.intersectObjects( enemies );
+
+            if ( intersects.length > 0 ) {
+                const hitEnemy = intersects[0].object;
+                
+                playSound('hit');
+                score++;
+                document.getElementById('score-val').innerText = score;
+                
+                hitEnemy.material.emissive.setHex(0xffffff);
+                setTimeout(() => {
+                    hitEnemy.material.emissive.setHex(0xff4d8d);
+                    repositionEnemy(hitEnemy);
+                }, 100);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }
+
+        function animate() {
+            requestAnimationFrame( animate );
+
+            const time = performance.now();
+
+            if ( controls.isLocked === true ) {
+                weaponGroup.position.z = -2 + weaponRecoil;
+                weaponGroup.rotation.x = weaponRecoil * 0.1;
+                weaponRecoil *= 0.8;
+
+                enemies.forEach(enemy => {
+                    enemy.rotation.x += 0.01;
+                    enemy.rotation.y += 0.02;
+                    enemy.position.y += Math.sin(time * 0.003 + enemy.userData.seed) * 0.05;
+                });
+
+                const delta = ( time - prevTime ) / 1000;
+
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+
+                direction.z = Number( moveForward ) - Number( moveBackward );
+                direction.x = Number( moveRight ) - Number( moveLeft );
+                direction.normalize();
+
+                const speed = 400.0;
+
+                if ( moveForward || moveBackward ) velocity.z -= direction.z * speed * delta;
+                if ( moveLeft || moveRight ) velocity.x -= direction.x * speed * delta;
+
+                const pos = controls.getObject().position;
+                const oldX = pos.x;
+                const oldZ = pos.z;
+
+                controls.moveRight( - velocity.x * delta );
+                
+                let collisionX = false;
+                for(let box of objects) {
+                    if (pos.x > box.minX && pos.x < box.maxX && pos.z > box.minZ && pos.z < box.maxZ) {
+                        collisionX = true; break;
+                    }
+                }
+                if(collisionX) pos.x = oldX;
+
+                controls.moveForward( - velocity.z * delta );
+
+                let collisionZ = false;
+                for(let box of objects) {
+                    if (pos.x > box.minX && pos.x < box.maxX && pos.z > box.minZ && pos.z < box.maxZ) {
+                        collisionZ = true; break;
+                    }
+                }
+                if(collisionZ) pos.z = oldZ;
+
+                pos.x = Math.max(-190, Math.min(190, pos.x));
+                pos.z = Math.max(-190, Math.min(190, pos.z));
+                pos.y = 10;
+            }
+
+            prevTime = time;
+            renderer.render( scene, camera );
+        }
+    </script>
+</body>
+</html>

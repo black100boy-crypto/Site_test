@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A propos - E-school</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <video class="fond-video" autoplay muted loop playsinline>
+    <source src="univers.mp4" type="video/mp4">
+  </video>
+  <div class="voile"></div>
+  <canvas id="etoiles"></canvas>
+
+  <header>
+    <h1>E-school</h1>
+    <nav>
+      <a href="index.html">Accueil</a>
+      <a href="A propos.html">A propos</a>
+      <a href="services.html">Services</a>
+      <a href="contact.html">Contact</a>
+      <a href="connexion.html">Connexion</a>
+      <a href="inscription.html" class="nav-cta">Inscription</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <h2>Notre histoire, votre avenir</h2>
+      <p>E-school est née d'une conviction : apprendre ne doit pas avoir de frontières.</p>
+      <a href="inscription.html" class="btn">Rejoindre E-school</a>
+      <a href="services.html" class="btn btn-outline">Nos services</a>
+    </section>
+
+    <section>
+      <h2>🚀 Notre mission</h2>
+      <p>Chez E-school, nous croyons que chaque apprenant mérite un accès à une éducation de qualité, où qu'il soit. Notre mission est de rendre l'apprentissage accessible, flexible et motivant pour tous.</p>
+    </section>
+
+    <h2 class="titre-centre">Nos valeurs</h2>
+    <div class="grille">
+      <section class="carte">
+        <h3>⭐ Excellence</h3>
+        <p>Des contenus et un accompagnement de haut niveau.</p>
+      </section>
+      <section class="carte">
+        <h3>💡 Innovation</h3>
+        <p>Des méthodes modernes adaptées à l'ère du numérique.</p>
+      </section>
+      <section class="carte">
+        <h3>🌍 Accessibilité</h3>
+        <p>Apprendre depuis chez soi, à son rythme, à petit prix.</p>
+      </section>
+      <section class="carte">
+        <h3>🤝 Communauté</h3>
+        <p>Des apprenants et des formateurs qui avancent ensemble.</p>
+      </section>
+    </div>
+
+    <h2 class="titre-centre">E-school en chiffres</h2>
+    <div class="stats">
+      <div class="stat"><span class="chiffre" data-cible="500">0</span><span class="plus">+</span><p>Apprenants</p></div>
+      <div class="stat"><span class="chiffre" data-cible="20">0</span><span class="plus">+</span><p>Formateurs</p></div>
+      <div class="stat"><span class="chiffre" data-cible="15">0</span><span class="plus">+</span><p>Matières</p></div>
+      <div class="stat"><span class="chiffre" data-cible="95">0</span><span class="plus">%</span><p>Satisfaction</p></div>
+    </div>
+
+    <h2 class="titre-centre">Notre équipe</h2>
+    <div class="grille">
+      <section class="carte">
+        <div class="avatar">👤</div>
+        <h3>Nom du fondateur</h3>
+        <p>Fondateur &amp; Directeur</p>
+      </section>
+      <section class="carte">
+        <div class="avatar">👩‍🏫</div>
+        <h3>Nom du formateur</h3>
+        <p>Responsable pédagogique</p>
+      </section>
+      <section class="carte">
+        <div class="avatar">👨‍💻</div>
+        <h3>Nom du développeur</h3>
+        <p>Responsable technique</p>
+      </section>
+    </div>
+
+    <section>
+      <h2>🎯 Notre objectif</h2>
+      <p>Former la prochaine génération de leaders grâce à un apprentissage moderne et personnalisé.</p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 E-school - Votre partenaire pour un apprentissage reussi</p>
+  </footer>
+
+  <script src="univers.js"></script>
+  <script>
+    // Compteurs animés : démarrent quand on arrive sur la section
+    const compteurs = document.querySelectorAll('.chiffre');
+    const observateur = new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (entree) {
+        if (!entree.isIntersecting) return;
+        const el = entree.target;
+        const cible = +el.dataset.cible;
+        let valeur = 0;
+        const pas = Math.max(1, Math.ceil(cible / 60));
+        const minuteur = setInterval(function () {
+          valeur += pas;
+          if (valeur >= cible) { valeur = cible; clearInterval(minuteur); }
+          el.textContent = valeur;
+        }, 25);
+        observateur.unobserve(el);
+      });
+    }, { threshold: 0.6 });
+    compteurs.forEach(function (c) { observateur.observe(c); });
+  </script>
+</body>
+</html>

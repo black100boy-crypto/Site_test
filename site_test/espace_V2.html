@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mon espace - E-school</title>
+<style>
+:root{--ac:#66c0f4;--bg1:#0b1018;--bg2:#1b2838;--mu:#8fa3b8}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Motiva Sans','Segoe UI',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2) 60%,#0f2236);color:#e8f1fa;user-select:none}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.foc{outline:none;font-family:inherit}
+#splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 50% 40%,#1b3a5c,#070b12);transition:opacity .7s,transform .7s;cursor:pointer}
+#splash.off{opacity:0;transform:scale(1.15);pointer-events:none}
+#splash h1{font-size:3.4rem;letter-spacing:4px;color:var(--ac);animation:lg 2.4s ease-in-out infinite}
+#splash p{margin-top:24px;color:var(--mu);animation:bl 1.6s infinite}
+@keyframes lg{50%{text-shadow:0 0 40px var(--ac);transform:scale(1.04)}}
+@keyframes bl{50%{opacity:.3}}
+#app{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:20px;padding:14px 34px;background:linear-gradient(#000a,#0000)}
+.logo{font-weight:800;letter-spacing:2px;color:var(--ac);font-size:1.25rem}
+.tabs{display:flex;gap:4px;flex:1;overflow-x:auto}
+.tab,.chip{background:none;border:0;color:var(--mu);font-size:1.02rem;padding:10px 16px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:.15s}
+.tab.cur{color:#fff;box-shadow:inset 0 -3px var(--ac)}
+.tab.on,.chip.on{background:rgba(255,255,255,.16);color:#fff;transform:scale(1.06)}
+.chip{background:rgba(255,255,255,.07);font-size:.92rem;padding:8px 14px}
+#view{flex:1;overflow:auto;padding:10px 34px 30px;animation:in .35s}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+.greet h1{font-size:2.1rem}.greet p{color:var(--mu);margin:6px 0 12px}
+.bar{height:8px;max-width:420px;background:rgba(255,255,255,.12);border-radius:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),#a78bfa);transition:width .8s}
+.row{display:flex;gap:24px;padding:36px 14px 44px;overflow-x:auto}
+.tile{flex:0 0 230px;height:290px;border:0;border-radius:10px;color:#fff;text-align:left;padding:20px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;cursor:pointer;background:linear-gradient(160deg,var(--c1),var(--c2));transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.tile.wide{flex-basis:470px}
+.tile .ic{position:absolute;top:18px;left:20px;font-size:3.2rem;font-weight:800}
+.tile h3{font-size:1.3rem}.tile small{color:#ffffffbb;font-size:.9rem}
+.tile.on{transform:scale(1.1);z-index:2;box-shadow:0 0 0 3px #fff,0 0 36px 6px rgba(102,192,244,.65);animation:pu 1.6s ease-in-out infinite}
+.tile.on::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);transform:translateX(-100%);animation:sh 1.4s infinite}
+@keyframes sh{to{transform:translateX(100%)}}
+@keyframes pu{50%{box-shadow:0 0 0 3px #fff,0 0 48px 10px rgba(102,192,244,.9)}}
+.pl{display:grid;grid-template-columns:1.7fr 1fr;gap:34px;padding:20px 10px}
+.vid{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000;box-shadow:0 10px 40px #000a}
+.info h1{font-size:1.7rem;margin-bottom:8px}.info p{color:var(--mu);margin-bottom:18px}
+.btn{display:block;width:100%;margin-top:12px;padding:15px 18px;border:0;border-radius:8px;background:#2a3f55;color:#fff;font-size:1rem;text-align:left;cursor:pointer;transition:.15s}
+.btn.on{background:var(--ac);color:#0b1018;transform:scale(1.04);box-shadow:0 0 28px rgba(102,192,244,.6)}
+.soon{text-align:center;padding:70px 20px}.soon div{font-size:4rem}.soon p{color:var(--mu);margin:10px auto 20px}.soon .btn{max-width:260px;margin:auto;text-align:center}
+.hints{padding:10px 34px;color:var(--mu);font-size:.85rem;background:linear-gradient(#0000,#000a)}
+#modal{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(5,10,18,.78);backdrop-filter:blur(6px)}
+#modal.show{display:grid;animation:fi .2s}
+@keyframes fi{from{opacity:0}}
+#box{background:#1b2838;border:1px solid #2f4258;border-radius:12px;padding:30px;width:min(460px,92vw);animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+#box h2{margin-bottom:8px}#box p{color:var(--mu);margin-bottom:10px}
+#toast{position:fixed;right:24px;bottom:-130px;z-index:60;display:flex;gap:14px;align-items:center;background:#1b2838;border:1px solid var(--ac);border-radius:10px;padding:14px 22px;box-shadow:0 0 30px rgba(102,192,244,.4);transition:bottom .5s cubic-bezier(.2,1.3,.4,1)}
+#toast.show{bottom:26px}#toast span{font-size:2rem}#toast small{color:var(--mu)}
+@media(max-width:800px){.pl{grid-template-columns:1fr}.hints{display:none}.top{padding:10px 14px;flex-wrap:wrap}#view{padding:6px 14px}.tile.wide{flex-basis:300px}.logo{display:none}}
+</style></head><body>
+<canvas id="bg"></canvas>
+
+<div id="splash"><div><h1>🎓 E-SCHOOL</h1><p>Appuie sur ENTRÉE ou clique pour démarrer</p></div></div>
+
+<div id="app">
+ <div class="top">
+  <div class="logo">E-SCHOOL</div>
+  <div class="tabs">
+   <button class="tab foc" data-a="go" data-p="home">Accueil</button>
+   <button class="tab foc" data-a="go" data-p="lessons">Leçons</button>
+   <button class="tab foc" data-a="go" data-p="detente">Détente</button>
+   <button class="tab foc" data-a="go" data-p="atelier">Atelier</button>
+   <button class="tab foc" data-a="go" data-p="nova">Nova</button>
+  </div>
+  <button class="chip foc" data-a="svc" id="svc"></button>
+  <span class="chip" id="xpc"></span>
+  <span class="chip" id="clk"></span>
+  <button class="chip foc" data-a="mute" id="mt">🔊</button>
+ </div>
+ <div id="view"></div>
+ <div class="hints">⬆️⬇️⬅️➡️ Naviguer &nbsp;·&nbsp; ENTRÉE Valider &nbsp;·&nbsp; ÉCHAP Retour</div>
+</div>
+
+<div id="modal"><div id="box"></div></div>
+<div id="toast"><span>🏆</span><div><b id="tt"></b><br><small id="ts"></small></div></div>
+
+<script>
+var $=function(i){return document.getElementById(i)},L=localStorage;
+var S={cours:{n:"Cours en ligne",e:"💻"},soutien:{n:"Soutien individuel",e:"🧑‍🏫"},tutorat:{n:"Tutorat en direct",e:"🎥"},formation:{n:"Formation avec certificat",e:"🏆"}};
+// [titre, durée, vidéo (fichier dans /videos ou lien YouTube), résumé]
+var LC={
+cours:[["Introduction au cours","10 min","videos/cours1.mp4","Découvre le programme et comment bien apprendre."],["Leçon 1 : les bases","15 min","videos/cours2.mp4","Les notions essentielles à maîtriser."],["Leçon 2 : s'entraîner","20 min","videos/cours3.mp4","Des exemples et des exercices guidés."]],
+soutien:[["Faire le point","10 min","videos/soutien1.mp4","Identifie tes forces et tes difficultés."],["Méthode de travail","15 min","videos/soutien2.mp4","Organise tes révisions efficacement."],["Préparer la séance","10 min","videos/soutien3.mp4","Prépare tes questions."]],
+tutorat:[["Suivre un cours en direct","10 min","videos/tutorat1.mp4","Prépare-toi avant chaque session."],["Replay : session type","25 min","videos/tutorat2.mp4","Revois une session complète."],["Bien poser ses questions","10 min","videos/tutorat3.mp4","Apprends à poser des questions utiles."]],
+formation:[["Module 1 : démarrer","15 min","videos/formation1.mp4","Présentation du parcours."],["Module 2 : approfondir","20 min","videos/formation2.mp4","Les compétences clés."],["Module 3 : projet final","25 min","videos/formation3.mp4","Le projet qui valide ta formation."]]
+};
+var cur="cours",t0=(L.getItem("service")||"").toLowerCase();
+for(var k in S)if(t0.indexOf(k)>-1)cur=k;
+var nom=L.getItem("nom")||L.getItem("prenom")||"Explorateur",xp=+L.getItem("es_xp")||0;
+function dn(){try{return JSON.parse(L.getItem("es_done_"+cur))||[]}catch(e){return[]}}
+
+// ===== Sons (créés par le navigateur) =====
+var AC=null,mute=L.getItem("es_mute")==="1";
+var SN={
+move:[[900,0,.05,.05,"sine"]],
+ok:[[600,0,.07,.08,"triangle"],[900,.07,.1,.08,"triangle"]],
+back:[[700,0,.07,.07,"triangle"],[450,.07,.12,.07,"triangle"]],
+open:[[500,0,.1,.06,"sine"],[750,.08,.14,.06,"sine"],[1000,.16,.22,.05,"sine"]],
+err:[[220,0,.12,.07,"square"]],
+ach:[[784,0,.12,.07,"triangle"],[988,.12,.12,.07,"triangle"],[1175,.24,.35,.07,"triangle"]],
+start:[[392,0,.2,.07,"sine"],[523,.15,.2,.07,"sine"],[659,.3,.2,.07,"sine"],[784,.45,.5,.08,"sine"]]
+};
+function snd(n){if(mute||!AC)return;var t=AC.currentTime;SN[n].forEach(function(s){var o=AC.createOscillator(),g=AC.createGain();o.type=s[4];o.frequency.value=s[0];g.gain.setValueAtTime(0,t+s[1]);g.gain.linearRampToValueAtTime(s[3],t+s[1]+.01);g.gain.exponentialRampToValueAtTime(.0001,t+s[1]+s[2]);o.connect(g);g.connect(AC.destination);o.start(t+s[1]);o.stop(t+s[1]+s[2]+.03)})}
+
+// ===== Vidéo =====
+function vErr(el){el.outerHTML='<div class="info"><p>🎬 Vidéo bientôt disponible. Ajoute le fichier dans le dossier <b>videos</b> ou un lien YouTube.</p></div>'}
+function srcHtml(u){var m=u.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+ if(m)return '<iframe class="vid" src="https://www.youtube.com/embed/'+m[1]+'" allowfullscreen></iframe>';
+ return '<video class="vid" controls src="'+u+'" onerror="vErr(this)"></video>'}
+
+// ===== Écrans =====
+function T(a,p,ic,t,s,c1,c2,w){return '<button class="tile foc'+(w?' wide':'')+'" data-a="'+a+'" data-p="'+p+'" style="--c1:'+c1+';--c2:'+c2+'"><span class="ic">'+ic+'</span><h3>'+t+'</h3><small>'+s+'</small></button>'}
+function nextL(){var d=dn(),a=LC[cur];for(var i=0;i<a.length;i++)if(d.indexOf(i)<0)return i;return -1}
+function soon(t){return '<div class="soon"><div>🚧</div><h1>'+t+'</h1><p>Contenu à venir. On va le construire ensemble.</p><button class="btn foc" data-a="back">← Retour</button></div>'}
+var V={
+home:function(){var n=nextL(),a=LC[cur],lv=Math.floor(xp/100),d=dn();
+ var c=n<0?T("go","lessons","🎉","Tout est terminé","Revois tes leçons","#16a34a","#065f46",1):T("open",n,"▶️","Continuer",a[n][0],"#2563eb","#7c3aed",1);
+ return '<div class="greet"><h1>Salut '+nom+' 👋</h1><p>'+S[cur].e+' '+S[cur].n+' · Niveau '+(lv+1)+'</p><div class="bar"><i style="width:'+(xp%100)+'%"></i></div></div><div class="row">'
+ +c+T("go","lessons","📖","Leçons",d.length+" / "+a.length+" terminées","#0e7490","#1e3a8a")
+ +T("go","detente","🎮","Détente","Pause et jeux","#be185d","#581c87")
+ +T("go","atelier","🛠️","Atelier","Tes notes","#b45309","#7c2d12")
+ +T("go","nova","✨","Nova","Assistant IA","#0f766e","#134e4a")
+ +T("quit","","🚪","Quitter","Retour au site","#475569","#1e293b")+'</div>'},
+lessons:function(){var a=LC[cur],d=dn();
+ return '<div class="greet"><h1>📖 Leçons</h1><p>'+S[cur].n+' · '+d.length+' / '+a.length+' terminées</p></div><div class="row">'
+ +a.map(function(l,i){var ok=d.indexOf(i)>-1;return T("open",i,ok?"✅":(i+1),l[0],"⏱ "+l[1],ok?"#15803d":"#1d4ed8",ok?"#052e16":"#312e81")}).join("")+'</div>'},
+player:function(i){var l=LC[cur][i],ok=dn().indexOf(i)>-1,last=i>=LC[cur].length-1;
+ return '<div class="pl"><div>'+srcHtml(l[2])+'</div><div class="info"><h1>'+l[0]+'</h1><p>'+l[3]+'</p>'
+ +'<button class="btn foc" data-a="finish" data-p="'+i+'">'+(ok?'✅ Déjà terminée':'✔ Terminer la leçon (+30 XP)')+'</button>'
+ +(last?'':'<button class="btn foc" data-a="open" data-p="'+(i+1)+'">Leçon suivante →</button>')
+ +'<button class="btn foc" data-a="back">← Retour</button></div></div>'},
+detente:function(){return soon("🎮 Détente")},
+atelier:function(){return soon("🛠️ Atelier")},
+nova:function(){return soon("✨ Nova")}
+};
+var stack=[["home"]],vw="home";
+function show(v,a){vw=v;$("view").innerHTML=V[v](a);
+ document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("cur",b.dataset.p===(v==="player"?"lessons":v))});
+ hud();fo=null;setf($("view").querySelector(".foc")||list()[0],true)}
+function hud(){$("xpc").textContent="⭐ "+xp+" XP";$("svc").textContent=S[cur].e+" "+S[cur].n;$("mt").textContent=mute?"🔇":"🔊"}
+
+// ===== Focus façon Big Picture =====
+var fo=null,pf=null;
+function modalOn(){return $("modal").classList.contains("show")}
+function list(){return [].slice.call((modalOn()?$("box"):$("app")).querySelectorAll(".foc")).filter(function(e){return e.offsetParent!==null})}
+function setf(el,quiet){if(!el)return;if(fo)fo.classList.remove("on");fo=el;el.classList.add("on");el.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});if(!quiet)snd("move")}
+function mv(dx,dy){var l=list();if(!fo||l.indexOf(fo)<0){setf(l[0],true);return}
+ var r=fo.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,best=null,bs=1e9;
+ l.forEach(function(e){if(e===fo)return;var q=e.getBoundingClientRect(),x=q.left+q.width/2-cx,y=q.top+q.height/2-cy,p=dx?x*dx:y*dy;if(p<=4)return;var sc=p+(dx?Math.abs(y):Math.abs(x))*2.2;if(sc<bs){bs=sc;best=e}});
+ if(best)setf(best);else snd("err")}
+
+// ===== Confirmation =====
+function ask(title,text,btns){pf=fo;var b=$("box");b.innerHTML="<h2>"+title+"</h2><p>"+text+"</p>";
+ btns.forEach(function(x){var el=document.createElement("button");el.className="btn foc";el.textContent=x[0];
+  el.onclick=function(){closeM();snd(x[2]||"ok");if(x[1])x[1]()};b.appendChild(el)});
+ $("modal").classList.add("show");snd("open");fo=null;setf(b.querySelector(".foc"),true)}
+function closeM(){$("modal").classList.remove("show");if(pf&&document.body.contains(pf))setf(pf,true)}
+
+// ===== Succès =====
+var tm;function achv(t,s){$("tt").textContent=t;$("ts").textContent=s;$("toast").classList.add("show");snd("ach");clearTimeout(tm);tm=setTimeout(function(){$("toast").classList.remove("show")},3800)}
+function complete(i){var d=dn(),lv0=Math.floor(xp/100);
+ if(d.indexOf(i)<0){d.push(i);L.setItem("es_done_"+cur,JSON.stringify(d));xp+=30;L.setItem("es_xp",xp);
+  achv("Leçon terminée","+30 XP · "+LC[cur][i][0]);
+  var lv=Math.floor(xp/100);if(lv>lv0)setTimeout(function(){achv("Niveau "+(lv+1)+" atteint !","Continue comme ça")},4300)}
+ show("player",i)}
+
+// ===== Actions =====
+function back(){
+ if(modalOn()){closeM();snd("back");return}
+ if(stack.length>1){stack.pop();var s=stack[stack.length-1];snd("back");show(s[0],s[1])}
+ else act("quit")}
+function act(a,p){
+ if(a==="go"){snd("ok");stack=[[p]];show(p)}
+ else if(a==="open"){snd("ok");stack.push(["player",+p]);show("player",+p)}
+ else if(a==="back")back();
+ else if(a==="finish"){if(dn().indexOf(+p)>-1){snd("err");return}
+  ask("Terminer la leçon ?","Tu gagneras 30 XP.",[["✔ Oui, terminée",function(){complete(+p)}],["Pas encore",null,"back"]])}
+ else if(a==="svc"){var bt=Object.keys(S).map(function(k){return [S[k].e+" "+S[k].n,function(){cur=k;L.setItem("service",k);stack=[["home"]];show("home")}]});
+  bt.push(["Annuler",null,"back"]);ask("Choisir mon service","Ton espace s'adapte au service choisi.",bt)}
+ else if(a==="mute"){mute=!mute;L.setItem("es_mute",mute?"1":"0");hud();if(!mute)snd("ok")}
+ else if(a==="quit"){ask("Quitter l'espace ?","Tu retournes à l'accueil du site.",[["Oui, quitter",function(){location.href="index.html"}],["Rester",null,"back"]])}}
+
+document.addEventListener("click",function(e){var b=e.target.closest("[data-a]");if(!b||!AC)return;setf(b,true);act(b.dataset.a,b.dataset.p)});
+document.addEventListener("mouseover",function(e){var f=e.target.closest(".foc");if(f&&f!==fo&&(modalOn()?$("box"):$("app")).contains(f))setf(f)});
+document.addEventListener("keydown",function(e){
+ if(!AC){if(e.key==="Enter"||e.key===" "){e.preventDefault();start()}return}
+ var k=e.key,m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+ if(m[k]){e.preventDefault();mv(m[k][0],m[k][1])}
+ else if(k==="Enter"||k===" "){if(fo){e.preventDefault();fo.click()}}
+ else if(k==="Escape"||k==="Backspace"){e.preventDefault();back()}});
+
+// ===== Démarrage =====
+function start(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();
+ $("splash").classList.add("off");snd("start");show("home");
+ if(!L.getItem("es_wel")){L.setItem("es_wel","1");setTimeout(function(){achv("Bienvenue sur E-school","Succès débloqué : première connexion")},1200)}}
+$("splash").onclick=start;
+
+function clock(){var d=new Date();$("clk").textContent=("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
+clock();setInterval(clock,20000);hud();
+
+// ===== Fond animé =====
+var cv=$("bg"),cx=cv.getContext("2d"),P=[];function rs(){cv.width=innerWidth;cv.height=innerHeight}rs();onresize=rs;
+for(var i=0;i<90;i++)P.push({x:Math.random(),y:Math.random(),r:Math.random()*2+.4,v:Math.random()*3e-4+8e-5,a:Math.random()*.6+.2});
+(function f(){cx.clearRect(0,0,cv.width,cv.height);P.forEach(function(p){p.y-=p.v;if(p.y<0)p.y=1;cx.fillStyle="rgba(150,210,255,"+p.a+")";cx.beginPath();cx.arc(p.x*cv.width,p.y*cv.height,p.r,0,7);cx.fill()});requestAnimationFrame(f)})();
+</script>
+</body></html>

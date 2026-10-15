@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>La Zone Détente d'Alexandro</title>
+    <style>
+        /* Un peu de style pour que ça soit stylé, on n'est pas des sauvages */
+        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: white; text-align: center; padding: 50px; }
+        .zone-detente { border: 2px solid #00ffcc; padding: 30px; border-radius: 15px; background: #2d2d2d; max-width: 400px; margin: 0 auto; box-shadow: 0 0 15px #00ffcc; }
+        button { background: #00ffcc; color: black; font-weight: bold; border: none; padding: 15px 30px; font-size: 18px; cursor: pointer; border-radius: 8px; margin-top: 20px; transition: 0.3s; }
+        button:hover { background: #00b38f; transform: scale(1.05); }
+        .score-box { font-size: 20px; margin: 10px 0; }
+        .record { color: #ffcc00; font-weight: bold; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- 1. ÇA C'EST LE HTML (TA ZONE DÉTENTE)      -->
+    <!-- ========================================== -->
+    <div class="zone-detente">
+        <h1>🎮 Zone Détente</h1>
+        
+        <div class="score-box">
+            <p>Score de ta partie : <span id="score-actuel">0</span></p>
+        </div>
+
+        <div class="score-box record">
+            <p>🏆 MEILLEUR SCORE : <span id="meilleur-score">0</span></p>
+        </div>
+
+        <!-- Bouton pour simuler que tu joues à ton jeu -->
+        <button id="btn-jouer">Jouer une partie</button>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 2. ÇA C'EST LE JAVASCRIPT (LE CERVEAU)     -->
+    <!-- ========================================== -->
+    <script>
+        // On donne un nom à notre sauvegarde dans le navigateur
+        const CLE_SAUVEGARDE = 'alexandro_record_detente';
+
+        // Quand la page charge, on va chercher le record. S'il n'y a rien, on met 0.
+        let leGrosRecord = localStorage.getItem(CLE_SAUVEGARDE) || 0;
+        
+        // On affiche direct le record sur la page
+        document.getElementById('meilleur-score').textContent = leGrosRecord;
+
+        // On écoute le clic sur le bouton "Jouer" (c'est ici que tu mettras la fin de TON vrai jeu plus tard)
+        document.getElementById('btn-jouer').addEventListener('click', function() {
+            
+            // On fait semblant que tu viens de jouer et de faire un score au hasard (entre 10 et 100)
+            let scoreDeLaPartie = Math.floor(Math.random() * 90) + 10; 
+            
+            // On affiche le score que tu viens de faire
+            document.getElementById('score-actuel').textContent = scoreDeLaPartie;
+
+            // LE MOMENT DE VÉRITÉ : Est-ce que tu as battu ton record ?
+            if (scoreDeLaPartie > leGrosRecord) {
+                // Bam, nouveau record !
+                leGrosRecord = scoreDeLaPartie; 
+                
+                // On met à jour l'affichage avec le nouveau chiffre
+                document.getElementById('meilleur-score').textContent = leGrosRecord; 
+                
+                // On sauvegarde ça dans la mémoire de ton navigateur
+                localStorage.setItem(CLE_SAUVEGARDE, leGrosRecord); 
+                
+                alert("Nouveau Record battu mon gars ! T'es un monstre ! 🔥");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Classement Nova Shooter : tout le monde lit, un élève connecté (même anonymement) peut ajouter son score, jamais le modifier/supprimer.
+    match /scores_nova/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['game','score','name','t','uid'])
+        && request.resource.data.game == 'nova'
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0 && request.resource.data.score <= 800000
+        && request.resource.data.name is string && request.resource.data.name.size() <= 16;
+      allow update, delete: if false;
+    }
+    // Premium accordé par l'administrateur seulement (console Firebase / script admin)
+    match /premium/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

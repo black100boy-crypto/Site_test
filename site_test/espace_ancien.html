@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mon espace - E-school</title>
+<style>
+:root{--a:#6366f1;--b:#22d3ee;--c:#f472b6;--bg:#070a1f;--card:rgba(255,255,255,.06);--bd:rgba(255,255,255,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#eef1ff;min-height:100vh}
+#st{position:fixed;inset:0;width:100%;height:100%;z-index:-2}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.35;z-index:-1;animation:fl 14s ease-in-out infinite alternate}
+.o1{width:380px;height:380px;background:var(--a);top:-80px;left:10%}
+.o2{width:320px;height:320px;background:var(--c);bottom:-60px;right:8%;animation-delay:-5s}
+@keyframes fl{to{transform:translate(60px,40px) scale(1.15)}}
+header{position:fixed;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(7,10,31,.7);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);z-index:10}
+.logo{font-weight:800;font-size:1.3rem;background:linear-gradient(90deg,var(--b),var(--a),var(--c));-webkit-background-clip:text;color:transparent}
+.hd{display:flex;gap:10px;align-items:center}
+.pill{background:var(--card);border:1px solid var(--bd);padding:6px 12px;border-radius:20px;font-size:.88rem}
+select{background:#10163f;color:#eef1ff;border:1px solid var(--bd);border-radius:20px;padding:6px 10px}
+nav{position:fixed;top:64px;left:0;bottom:0;width:220px;padding:20px 14px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--bd);background:rgba(7,10,31,.4)}
+nav button{background:none;border:none;color:#aab3ee;text-align:left;padding:13px 16px;border-radius:14px;font-size:1rem;cursor:pointer;transition:.2s}
+nav button:hover{background:var(--card);color:#fff;transform:translateX(4px)}
+nav button.on{background:linear-gradient(135deg,var(--a),var(--c));color:#fff;box-shadow:0 6px 24px rgba(99,102,241,.45)}
+main{margin:64px 0 0 220px;padding:30px;max-width:1100px}
+.tab{display:none;animation:in .4s}.tab.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(12px)}}
+h2{font-size:1.8rem;margin-bottom:6px}
+.sub{color:#9aa6e8;margin-bottom:22px}
+.hero{position:relative;overflow:hidden;padding:30px;border-radius:24px;background:linear-gradient(135deg,rgba(99,102,241,.35),rgba(244,114,182,.25));border:1px solid var(--bd);margin-bottom:20px}
+.hero h2{font-size:2rem}
+.bar{height:12px;background:rgba(255,255,255,.12);border-radius:10px;margin:14px 0 6px;overflow:hidden;max-width:420px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--b),var(--c));border-radius:10px;transition:width .8s}
+.orbit{position:absolute;right:40px;top:20px;width:130px;height:130px;border:1px dashed rgba(255,255,255,.3);border-radius:50%;animation:rot 12s linear infinite}
+.orbit::before{content:"🪐";position:absolute;top:-16px;left:50%;font-size:2rem}
+.orbit::after{content:"🌍";position:absolute;inset:0;margin:auto;width:36px;height:36px;font-size:2rem}
+@keyframes rot{to{transform:rotate(360deg)}}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:20px;backdrop-filter:blur(10px);transition:.25s}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 34px rgba(99,102,241,.35);border-color:var(--a)}
+.card .e{font-size:2rem}.card h3{margin:6px 0}.card p{color:#aab3ee;font-size:.92rem}
+.num{font-size:1.9rem;font-weight:800}
+.btn{background:linear-gradient(135deg,var(--a),var(--c));color:#fff;border:none;padding:10px 20px;border-radius:24px;cursor:pointer;margin:10px 8px 0 0;font-size:.95rem;transition:.2s}
+.btn:hover{transform:scale(1.05)}.btn:disabled{opacity:.5;cursor:default}
+.mood button{font-size:1.8rem;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 16px;margin:8px 8px 0 0;cursor:pointer;transition:.2s}
+.mood button:hover{transform:scale(1.15)}
+.opt{display:block;width:100%;text-align:left;margin-top:8px;padding:10px 14px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:#fff;cursor:pointer}
+.opt:hover{border-color:var(--b)}
+.bulle{width:110px;height:110px;margin:16px auto;border-radius:50%;background:radial-gradient(circle,var(--b),var(--a));transition:transform 4s ease-in-out}
+#chat{height:340px;overflow-y:auto;background:rgba(0,0,0,.25);border:1px solid var(--bd);border-radius:18px;padding:14px;margin-bottom:12px}
+.m{margin-bottom:10px;padding:10px 14px;border-radius:14px;max-width:80%;white-space:pre-wrap}
+.me{background:var(--a);margin-left:auto}.nv{background:var(--card)}
+.row{display:flex;gap:10px}.row input{flex:1;padding:12px;border-radius:14px;border:1px solid var(--bd);background:#10163f;color:#fff}
+textarea{width:100%;padding:14px;border-radius:16px;border:1px solid var(--bd);background:#10163f;color:#fff}
+@media(max-width:780px){nav{top:64px;bottom:auto;width:100%;flex-direction:row;overflow-x:auto;padding:8px;border-right:0}nav button{white-space:nowrap}main{margin:124px 0 0;padding:16px}.orbit{display:none}.hd .pill:nth-child(-n+2){display:none}}
+</style></head><body>
+<canvas id="st"></canvas><div class="orb o1"></div><div class="orb o2"></div>
+
+<header><div class="logo">🎓 E-school</div>
+<div class="hd"><span class="pill">🔥 <b id="sk"></b> j</span><span class="pill">⭐ <b id="xp"></b> XP</span><select id="sv"></select><span class="pill" id="nm"></span></div></header>
+
+<nav id="nv">
+<button class="on" data-t="home">🏠 Accueil</button>
+<button data-t="prog">📚 Mon programme</button>
+<button data-t="fun">🎮 Détente</button>
+<button data-t="atl">🛠️ Atelier</button>
+<button data-t="nova">✨ Nova (IA)</button>
+</nav>
+
+<main>
+<section class="tab on" id="home">
+ <div class="hero"><div class="orbit"></div>
+  <h2 id="hi"></h2><p class="sub" id="hs" style="margin:6px 0 0"></p>
+  <div class="bar"><i id="lv"></i></div><small id="lt"></small></div>
+ <div class="g">
+  <div class="card"><div class="e">🔥</div><div class="num" id="sk2"></div><p>jours d'affilée</p></div>
+  <div class="card"><div class="e">⭐</div><div class="num" id="xp2"></div><p>points d'expérience</p></div>
+  <div class="card"><div class="e">🏅</div><div class="num" id="rk"></div><p>ton rang</p></div>
+ </div>
+ <div class="g">
+  <div class="card mood"><h3>Comment tu te sens aujourd'hui ?</h3>
+   <button data-m="0">😴</button><button data-m="1">😐</button><button data-m="2">😄</button><button data-m="3">🔥</button>
+   <p id="mm" style="margin-top:12px"></p></div>
+  <div class="card"><div class="e">🎯</div><h3>Défi du jour</h3><p id="df"></p><button class="btn" id="dfb"></button></div>
+ </div>
+</section>
+
+<section class="tab" id="prog"><h2 id="pt"></h2><p class="sub">Ton programme personnalisé.</p><div class="g" id="pg"></div></section>
+
+<section class="tab" id="fun"><h2>🎮 Détente</h2><p class="sub">Pas envie de travailler ? Ici on s'amuse et on gagne quand même des XP.</p>
+ <div class="g">
+  <div class="card"><div class="e">⚡</div><h3>Quiz éclair</h3><div id="qz"></div></div>
+  <div class="card" style="text-align:center"><div class="e">🫧</div><h3>Respiration</h3><div class="bulle" id="bl"></div><p id="rm">&nbsp;</p><button class="btn" id="rb">Commencer</button></div>
+  <div class="card"><div class="e">💡</div><h3>Citation</h3><p id="ct" style="font-size:1.1rem;margin-top:8px"></p><button class="btn" id="cb">Une autre</button></div>
+ </div>
+</section>
+
+<section class="tab" id="atl"><h2>🛠️ Atelier</h2><p class="sub">Tes notes, enregistrées automatiquement.</p>
+ <textarea id="nt" rows="10" placeholder="Écris ici..."></textarea></section>
+
+<section class="tab" id="nova"><h2>✨ Nova</h2><p class="sub">Ton assistant IA.</p>
+ <div id="chat"></div>
+ <div class="row"><input id="q" placeholder="Pose ta question à Nova..."><button class="btn" style="margin:0" id="send">Envoyer</button></div>
+</section>
+</main>
+
+<script>
+var $=function(i){return document.getElementById(i)},L=localStorage;
+var S={
+cours:{n:"Cours en ligne",e:"💻",d:"Apprends à ton rythme avec des vidéos et des exercices.",i:[["🎬","Cours vidéo","Tous tes cours enregistrés."],["📝","Exercices","Entraîne-toi après chaque leçon."],["📈","Progression","Suis ton avancement."]]},
+soutien:{n:"Soutien scolaire individuel",e:"🧑‍🏫",d:"Un enseignant dédié rien que pour toi.",i:[["📅","Mes séances","Ton planning individuel."],["📖","Mes difficultés","Les points à retravailler."],["💬","Mon enseignant","Pose tes questions."]]},
+tutorat:{n:"Tutorat en direct",e:"🎥",d:"Des cours en direct avec des tuteurs.",i:[["🔴","Prochains directs","Les sessions à venir."],["🔁","Replays","Revois les sessions manquées."],["🙋","Mes questions","Prépare-les pour le tuteur."]]},
+formation:{n:"Formation avec certificat",e:"🏆",d:"Un parcours complet qui mène à ton certificat.",i:[["🗺️","Mon parcours","Les modules étape par étape."],["✅","Évaluations","Quiz et projets."],["📜","Mon certificat","Dispo à la fin de la formation."]]}
+};
+var cur="cours",t=(L.getItem("service")||"").toLowerCase();
+for(var k in S) if(t.indexOf(k)>-1) cur=k;
+var sv=$("sv");
+for(var k in S){var o=document.createElement("option");o.value=k;o.textContent=S[k].e+" "+S[k].n;sv.appendChild(o)}
+sv.value=cur;sv.onchange=function(){cur=sv.value;L.setItem("service",cur);draw()};
+var nom=L.getItem("nom")||L.getItem("prenom")||"Explorateur";$("nm").textContent=nom;
+
+// Série de jours + XP
+var today=new Date().toDateString(),yest=new Date(Date.now()-864e5).toDateString();
+var st=+L.getItem("es_sk")||0;
+if(L.getItem("es_last")!==today){st=(L.getItem("es_last")===yest)?st+1:1;L.setItem("es_sk",st);L.setItem("es_last",today)}
+var xp=+L.getItem("es_xp")||0,RG=["Explorateur","Astronaute","Capitaine","Légende"];
+function add(n){xp+=n;L.setItem("es_xp",xp);draw()}
+function draw(){
+ var s=S[cur],lv=Math.floor(xp/100);
+ $("sk").textContent=$("sk2").textContent=st;$("xp").textContent=$("xp2").textContent=xp;
+ $("rk").textContent=RG[Math.min(lv,3)];
+ $("lv").style.width=(xp%100)+"%";$("lt").textContent=(100-xp%100)+" XP avant le niveau "+(lv+2);
+ $("hi").textContent="Salut "+nom+" 👋";$("hs").textContent=s.e+" "+s.n+" : "+s.d;
+ $("pt").textContent=s.e+" "+s.n;
+ $("pg").innerHTML=s.i.map(function(i){return '<div class="card"><div class="e">'+i[0]+'</div><h3>'+i[1]+'</h3><p>'+i[2]+'</p></div>'}).join("");
+}
+
+// Navigation
+function go(id){document.querySelectorAll(".tab,#nv button").forEach(function(x){x.classList.remove("on")});$(id).classList.add("on");document.querySelector('[data-t="'+id+'"]').classList.add("on")}
+document.querySelectorAll("#nv button").forEach(function(b){b.onclick=function(){go(b.dataset.t)}});
+
+// Humeur
+var M=[["Pas d'énergie ? Respire une minute, sans pression.","fun"],["Un petit quiz de 2 minutes pour te réveiller ?","fun"],["Super ! Relève le défi du jour.","home"],["Tu es en feu ! Fonce sur ton programme.","prog"]];
+document.querySelectorAll("[data-m]").forEach(function(b){b.onclick=function(){var m=M[b.dataset.m];$("mm").innerHTML=m[0]+' <button class="btn" onclick="go(\''+m[1]+'\')">Y aller</button>'}});
+
+// Défi du jour
+var D=["Apprends 3 nouveaux mots d'anglais","Fais 5 calculs mentaux sans calculatrice","Lis un texte pendant 10 minutes","Explique une leçon à un ami","Note 3 choses apprises aujourd'hui"];
+$("df").textContent=D[Math.floor(Date.now()/864e5)%5];
+function dfState(){var ok=L.getItem("es_df")===today;$("dfb").disabled=ok;$("dfb").textContent=ok?"✅ Défi accompli":"Défi relevé ! +20 XP"}
+$("dfb").onclick=function(){L.setItem("es_df",today);dfState();add(20)};dfState();
+
+// Quiz éclair
+var Q=[["Capitale du Cameroun ?",["Douala","Yaoundé","Garoua"],1],["7 × 8 = ?",["54","56","64"],1],["Quelle planète est rouge ?",["Mars","Vénus","Jupiter"],0],["Quel langage structure une page web ?",["HTML","Excel","Word"],0],["Formule de l'eau ?",["CO2","NaCl","H2O"],2]],qi=0,sc=0;
+function quiz(){var z=$("qz");
+ if(qi>=Q.length){z.innerHTML='<p>Terminé : '+sc+'/'+Q.length+' 🎉</p><button class="btn" onclick="qi=0;sc=0;quiz()">Rejouer</button>';return}
+ var q=Q[qi];z.innerHTML='<p><b>'+q[0]+'</b></p>'+q[1].map(function(o,i){return '<button class="opt" onclick="rep('+i+')">'+o+'</button>'}).join("")}
+function rep(i){if(i===Q[qi][2]){sc++;add(5)}qi++;quiz()}
+quiz();
+
+// Respiration
+var rt=null,inh=true;
+function br(){$("bl").style.transform=inh?"scale(1.6)":"scale(1)";$("rm").textContent=inh?"Inspire…":"Expire…";inh=!inh}
+$("rb").onclick=function(){
+ if(rt){clearInterval(rt);rt=null;$("bl").style.transform="";$("rm").innerHTML="&nbsp;";$("rb").textContent="Commencer";return}
+ inh=true;br();rt=setInterval(br,4000);$("rb").textContent="Arrêter"};
+
+// Citations
+var C=["Chaque expert a d'abord été un débutant.","Un petit pas par jour mène très loin.","Apprendre, c'est s'allumer de l'intérieur.","L'erreur est une leçon déguisée.","Commence là où tu es, avec ce que tu as."];
+$("cb").onclick=function(){$("ct").textContent="« "+C[Math.floor(Math.random()*C.length)]+" »"};$("cb").click();
+
+// Atelier
+$("nt").value=L.getItem("es_notes")||"";$("nt").oninput=function(){L.setItem("es_notes",$("nt").value)};
+
+// Nova (Ollama en local)
+var hist=[];
+function msg(x,c){var d=document.createElement("div");d.className="m "+c;d.textContent=x;$("chat").appendChild(d);$("chat").scrollTop=1e9;return d}
+msg("Bonjour ! Je suis Nova. Comment puis-je t'aider ?","nv");
+async function send(){
+ var q=$("q").value.trim();if(!q)return;$("q").value="";msg(q,"me");hist.push({role:"user",content:q});
+ var b=msg("...","nv");
+ try{
+  var r=await fetch("http://localhost:11434/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({model:"llama3.2",stream:false,messages:[{role:"system",content:"Tu es Nova, assistante pédagogique de E-school. Réponds en français, simplement."}].concat(hist)})});
+  var d=await r.json();b.textContent=d.message.content;hist.push({role:"assistant",content:d.message.content});
+ }catch(e){b.textContent="Nova n'est pas encore activée sur cet ordinateur (Ollama non installé ou non lancé)."}
+}
+$("send").onclick=send;$("q").onkeydown=function(e){if(e.key==="Enter")send()};
+
+// Étoiles
+var cv=$("st"),cx=cv.getContext("2d"),P=[];function rs(){cv.width=innerWidth;cv.height=innerHeight}rs();onresize=rs;
+for(var i=0;i<130;i++)P.push({x:Math.random(),y:Math.random(),r:Math.random()*1.4+.3,v:Math.random()*4e-4+1e-4});
+(function f(){cx.clearRect(0,0,cv.width,cv.height);cx.fillStyle="#fff";P.forEach(function(p){p.y=(p.y+p.v)%1;cx.beginPath();cx.arc(p.x*cv.width,p.y*cv.height,p.r,0,7);cx.fill()});requestAnimationFrame(f)})();
+
+draw();
+</script>
+</body></html>
